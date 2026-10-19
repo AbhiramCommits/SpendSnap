@@ -15,15 +15,17 @@ fun CategoryDot(
     modifier: Modifier = Modifier,
 ) {
     androidx.compose.foundation.layout.Box(
-        modifier = modifier
-            .size(10.dp)
-            .background(parseColor(colorHex), CircleShape),
+        modifier =
+            modifier
+                .size(10.dp)
+                .background(parseColor(colorHex), CircleShape),
     )
 }
 
-fun parseColor(hex: String): Color = runCatching {
-    Color(android.graphics.Color.parseColor(hex))
-}.getOrElse { Color(0xFF6C757D) }
+fun parseColor(hex: String): Color =
+    runCatching {
+        Color(android.graphics.Color.parseColor(hex))
+    }.getOrElse { Color(0xFF6C757D) }
 
 fun contrastTextColor(backgroundHex: String): Color {
     val background = android.graphics.Color.parseColor(backgroundHex)

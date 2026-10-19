@@ -42,34 +42,40 @@ object InsightsCalculator {
         val previousTotalCents = previous.sumOf { it.amountCents }
         val categoryLookup = categories.associateBy { it.id }
 
-        val categorySpend = current
-            .groupBy { it.categoryId }
-            .map { (categoryId, rows) ->
-                val category = categoryLookup[categoryId]
-                val categoryTotal = rows.sumOf { it.amountCents }
-                CategorySpendUi(
-                    categoryId = categoryId,
-                    name = category?.name ?: "Other",
-                    colorHex = category?.colorHex ?: "#6C757D",
-                    totalCents = categoryTotal,
-                    fraction = if (totalCents == 0L) 0f else {
-                        categoryTotal.toFloat() / totalCents.toFloat()
-                    },
-                )
+        val categorySpend =
+            current
+                .groupBy { it.categoryId }
+                .map { (categoryId, rows) ->
+                    val category = categoryLookup[categoryId]
+                    val categoryTotal = rows.sumOf { it.amountCents }
+                    CategorySpendUi(
+                        categoryId = categoryId,
+                        name = category?.name ?: "Other",
+                        colorHex = category?.colorHex ?: "#6C757D",
+                        totalCents = categoryTotal,
+                        fraction =
+                            if (totalCents == 0L) {
+                                0f
+                            } else {
+                                categoryTotal.toFloat() / totalCents.toFloat()
+                            },
+                    )
+                }
+                .sortedByDescending { it.totalCents }
+
+        val topMerchants =
+            current
+                .groupBy { it.merchant.trim() }
+                .map { (merchant, rows) -> MerchantSpendUi(merchant, rows.sumOf { it.amountCents }) }
+                .sortedByDescending { it.totalCents }
+                .take(3)
+
+        val monthOverMonthPercent =
+            if (previousTotalCents == 0L) {
+                null
+            } else {
+                ((totalCents - previousTotalCents).toDouble() / previousTotalCents.toDouble()) * 100.0
             }
-            .sortedByDescending { it.totalCents }
-
-        val topMerchants = current
-            .groupBy { it.merchant.trim() }
-            .map { (merchant, rows) -> MerchantSpendUi(merchant, rows.sumOf { it.amountCents }) }
-            .sortedByDescending { it.totalCents }
-            .take(3)
-
-        val monthOverMonthPercent = if (previousTotalCents == 0L) {
-            null
-        } else {
-            ((totalCents - previousTotalCents).toDouble() / previousTotalCents.toDouble()) * 100.0
-        }
 
         return InsightsData(
             totalCents = totalCents,
@@ -81,6 +87,8 @@ object InsightsCalculator {
         )
     }
 
-    private fun ExpenseEntity.isInMonth(month: YearMonth, zone: ZoneId): Boolean =
-        YearMonth.from(Instant.ofEpochMilli(occurredAt).atZone(zone).toLocalDate()) == month
+    private fun ExpenseEntity.isInMonth(
+        month: YearMonth,
+        zone: ZoneId,
+    ): Boolean = YearMonth.from(Instant.ofEpochMilli(occurredAt).atZone(zone).toLocalDate()) == month
 }

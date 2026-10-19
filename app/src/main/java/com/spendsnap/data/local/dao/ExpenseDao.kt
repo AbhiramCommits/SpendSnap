@@ -45,7 +45,10 @@ interface ExpenseDao {
         WHERE occurredAt >= :startInclusive AND occurredAt < :endExclusive
         """,
     )
-    fun observeMonthlyTotal(startInclusive: Long, endExclusive: Long): Flow<Long>
+    fun observeMonthlyTotal(
+        startInclusive: Long,
+        endExclusive: Long,
+    ): Flow<Long>
 
     @Query(
         """
@@ -84,7 +87,11 @@ interface ExpenseDao {
         WHERE id = :id AND syncState != 'SYNCED'
         """,
     )
-    suspend fun markSynced(id: String, remoteId: String, updatedAt: Long)
+    suspend fun markSynced(
+        id: String,
+        remoteId: String,
+        updatedAt: Long,
+    )
 
     @Query(
         """
@@ -93,5 +100,9 @@ interface ExpenseDao {
         WHERE id = :id AND syncState != 'SYNCED'
         """,
     )
-    suspend fun markSyncState(id: String, state: SyncState, updatedAt: Long)
+    suspend fun markSyncState(
+        id: String,
+        state: SyncState,
+        updatedAt: Long,
+    )
 }

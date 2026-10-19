@@ -1,0 +1,49 @@
+build:
+  maxIssues: 0
+
+complexity:
+  LongMethod:
+    active: false
+  LongParameterList:
+    active: false
+  TooManyFunctions:
+    active: false
+  CyclomaticComplexMethod:
+    threshold: 20
+
+naming:
+  FunctionNaming:
+    active: false
+  TopLevelPropertyNaming:
+    constantPattern: '[A-Z][_A-Za-z0-9]*'
+
+style:
+  MagicNumber:
+    active: false
+  MaxLineLength:
+    maxLineLength: 140
+  ReturnCount:
+    active: false
+  WildcardImport:
+    active: false
+  ForbiddenComment:
+    active: false
+  UnusedPrivateMember:
+    active: true
+  UnusedParameter:
+    active: false
+
+exceptions:
+  TooGenericExceptionCaught:
+    active: false
+  SwallowedException:
+    active: false
+  InstanceOfCheckForException:
+    active: false
+
+potential-bugs:
+  LateinitUsage:
+    active: false
+  UnsafeCallOnNullableType:
+    active: false
+

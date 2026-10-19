@@ -38,7 +38,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -54,9 +53,7 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InsightsScreen(
-    viewModel: InsightsViewModel = hiltViewModel(),
-) {
+fun InsightsScreen(viewModel: InsightsViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     InsightsContent(
         state = state,
@@ -89,17 +86,19 @@ fun InsightsContent(
                 actions = {
                     IconButton(
                         onClick = onPreviousMonth,
-                        modifier = Modifier.semantics {
-                            contentDescription = "Previous month insights"
-                        },
+                        modifier =
+                            Modifier.semantics {
+                                contentDescription = "Previous month insights"
+                            },
                     ) {
                         Icon(Icons.Outlined.ChevronLeft, contentDescription = null)
                     }
                     IconButton(
                         onClick = onNextMonth,
-                        modifier = Modifier.semantics {
-                            contentDescription = "Next month insights"
-                        },
+                        modifier =
+                            Modifier.semantics {
+                                contentDescription = "Next month insights"
+                            },
                     ) {
                         Icon(Icons.Outlined.ChevronRight, contentDescription = null)
                     }
@@ -108,37 +107,45 @@ fun InsightsContent(
         },
     ) { padding ->
         when {
-            state.isLoading -> LoadingState(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                label = "Loading insights",
-            )
+            state.isLoading ->
+                LoadingState(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(padding),
+                    label = "Loading insights",
+                )
 
-            state.error != null -> Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(16.dp),
-            ) {
-                ErrorBanner(message = state.error)
-            }
+            state.error != null ->
+                Column(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(padding)
+                            .padding(16.dp),
+                ) {
+                    ErrorBanner(message = state.error)
+                }
 
-            state.data == null || state.data?.totalCents == 0L -> EmptyState(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .testTag("insights_empty"),
-                title = "No insights this month",
-                message = "Add expenses or import a CSV to unlock category and merchant trends.",
-            )
+            state.data == null || state.data?.totalCents == 0L ->
+                EmptyState(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(padding)
+                            .testTag("insights_empty"),
+                    title = "No insights this month",
+                    message = "Add expenses or import a CSV to unlock category and merchant trends.",
+                )
 
-            else -> InsightsBody(
-                state = state,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-            )
+            else ->
+                InsightsBody(
+                    state = state,
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(padding),
+                )
         }
     }
 }
@@ -150,16 +157,18 @@ private fun InsightsBody(
 ) {
     val data = state.data ?: return
     Column(
-        modifier = modifier
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+        modifier =
+            modifier
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-            ),
+            colors =
+                CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                ),
             shape = RoundedCornerShape(20.dp),
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
@@ -208,9 +217,10 @@ private fun InsightsBody(
         Text("Top merchants", style = MaterialTheme.typography.titleLarge)
         data.topMerchants.forEachIndexed { index, merchant ->
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("top_merchant_${index + 1}"),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .testTag("top_merchant_${index + 1}"),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -233,18 +243,20 @@ private fun InsightsBody(
 @Composable
 private fun MonthDelta(data: InsightsData) {
     val delta = data.monthOverMonthPercent
-    val icon = when {
-        delta == null -> Icons.Outlined.TrendingFlat
-        delta > 0 -> Icons.Outlined.TrendingUp
-        delta < 0 -> Icons.Outlined.TrendingDown
-        else -> Icons.Outlined.TrendingFlat
-    }
-    val text = when {
-        delta == null -> "No prior-month data"
-        delta > 0 -> "+${"%.1f".format(Locale.getDefault(), delta)}% vs last month"
-        delta < 0 -> "${"%.1f".format(Locale.getDefault(), delta)}% vs last month"
-        else -> "Flat vs last month"
-    }
+    val icon =
+        when {
+            delta == null -> Icons.Outlined.TrendingFlat
+            delta > 0 -> Icons.Outlined.TrendingUp
+            delta < 0 -> Icons.Outlined.TrendingDown
+            else -> Icons.Outlined.TrendingFlat
+        }
+    val text =
+        when {
+            delta == null -> "No prior-month data"
+            delta > 0 -> "+${"%.1f".format(Locale.getDefault(), delta)}% vs last month"
+            delta < 0 -> "${"%.1f".format(Locale.getDefault(), delta)}% vs last month"
+            else -> "Flat vs last month"
+        }
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(
             icon,
@@ -265,9 +277,10 @@ private fun MonthDelta(data: InsightsData) {
 @Composable
 private fun CategoryBar(category: CategorySpendUi) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("category_bar_${category.categoryId}"),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .testTag("category_bar_${category.categoryId}"),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Row(
@@ -282,22 +295,24 @@ private fun CategoryBar(category: CategorySpendUi) {
             MoneyText(category.totalCents, style = MaterialTheme.typography.bodyLarge)
         }
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(10.dp)
-                .background(
-                    MaterialTheme.colorScheme.surfaceVariant,
-                    RoundedCornerShape(50),
-                )
-                .semantics {
-                    contentDescription = "${category.name}: ${(category.fraction * 100).toInt()} percent"
-                },
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(10.dp)
+                    .background(
+                        MaterialTheme.colorScheme.surfaceVariant,
+                        RoundedCornerShape(50),
+                    )
+                    .semantics {
+                        contentDescription = "${category.name}: ${(category.fraction * 100).toInt()} percent"
+                    },
         ) {
             Box(
-                modifier = Modifier
-                    .fillMaxWidth(category.fraction.coerceIn(0f, 1f))
-                    .height(10.dp)
-                    .background(parseColor(category.colorHex), RoundedCornerShape(50)),
+                modifier =
+                    Modifier
+                        .fillMaxWidth(category.fraction.coerceIn(0f, 1f))
+                        .height(10.dp)
+                        .background(parseColor(category.colorHex), RoundedCornerShape(50)),
             )
         }
         Text(
@@ -308,5 +323,4 @@ private fun CategoryBar(category: CategorySpendUi) {
     }
 }
 
-private fun YearMonth.formatMonth(): String =
-    format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault()))
+private fun YearMonth.formatMonth(): String = format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault()))

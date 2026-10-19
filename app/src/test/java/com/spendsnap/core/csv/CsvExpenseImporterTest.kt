@@ -10,11 +10,12 @@ class CsvExpenseImporterTest {
 
     @Test
     fun validRows_areParsedWithCategoriesAndAmounts() {
-        val csv = """
+        val csv =
+            """
             date,merchant,amount,category
             2026-10-01,Corner Cafe,12.50,Meals
             2026-10-02,"Northwind, Inc.","1,234.56",Software
-        """.trimIndent()
+            """.trimIndent()
 
         val result = importer.parse(csv, categories, now = 1_000)
 
@@ -30,10 +31,11 @@ class CsvExpenseImporterTest {
 
     @Test
     fun malformedDate_reportsThePhysicalLine() {
-        val csv = """
+        val csv =
+            """
             date,merchant,amount,category
             not-a-date,Cafe,10.00,Meals
-        """.trimIndent()
+            """.trimIndent()
 
         val result = importer.parse(csv, categories)
 
@@ -45,10 +47,11 @@ class CsvExpenseImporterTest {
 
     @Test
     fun badAmount_reportsThePhysicalLine() {
-        val csv = """
+        val csv =
+            """
             date,merchant,amount,category
             2026-10-01,Cafe,abc,Meals
-        """.trimIndent()
+            """.trimIndent()
 
         val result = importer.parse(csv, categories)
 
@@ -58,10 +61,11 @@ class CsvExpenseImporterTest {
 
     @Test
     fun unknownCategory_fallsBackToOther() {
-        val csv = """
+        val csv =
+            """
             date,merchant,amount,category
             2026-10-01,Cafe,10.00,Space Travel
-        """.trimIndent()
+            """.trimIndent()
 
         val result = importer.parse(csv, categories)
 
@@ -81,10 +85,11 @@ class CsvExpenseImporterTest {
 
     @Test
     fun malformedColumnCount_reportsRowError() {
-        val csv = """
+        val csv =
+            """
             date,merchant,amount,category
             2026-10-01,Cafe,10.00
-        """.trimIndent()
+            """.trimIndent()
 
         val result = importer.parse(csv, categories)
 

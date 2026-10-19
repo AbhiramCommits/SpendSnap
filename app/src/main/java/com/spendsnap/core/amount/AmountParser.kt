@@ -13,23 +13,28 @@ object AmountParser {
     private val allowedCurrencyMarks = setOf('$', '€', '£', '¥', '₹', '₽', '₩')
     private val whitespace = setOf(' ', '\u00A0', '\u202F', '\t')
 
-    fun parse(raw: String, locale: Locale = Locale.getDefault()): Long? {
+    @Suppress("CyclomaticComplexMethod")
+    fun parse(
+        raw: String,
+        locale: Locale = Locale.getDefault(),
+    ): Long? {
         if (raw.isBlank()) return null
 
         val symbols = DecimalFormatSymbols.getInstance(locale)
-        val cleaned = buildString {
-            raw.trim().forEach { original ->
-                val character = normalizeDigit(original)
-                when {
-                    character == symbols.decimalSeparator -> append('.')
-                    character == symbols.groupingSeparator -> append(',')
-                    character in whitespace -> Unit
-                    character in allowedCurrencyMarks -> Unit
-                    character == '\'' -> Unit
-                    else -> append(character)
+        val cleaned =
+            buildString {
+                raw.trim().forEach { original ->
+                    val character = normalizeDigit(original)
+                    when {
+                        character == symbols.decimalSeparator -> append('.')
+                        character == symbols.groupingSeparator -> append(',')
+                        character in whitespace -> Unit
+                        character in allowedCurrencyMarks -> Unit
+                        character == '\'' -> Unit
+                        else -> append(character)
+                    }
                 }
             }
-        }
         if (cleaned.isEmpty() || cleaned.any { it == '-' || it == '+' }) return null
         if (cleaned.any { !it.isDigit() && it != '.' && it != ',' }) return null
         if (cleaned.none(Char::isDigit)) return null
@@ -42,38 +47,42 @@ object AmountParser {
         val lastDot = cleaned.lastIndexOf('.')
         val lastComma = cleaned.lastIndexOf(',')
 
-        val decimalSeparator: Char? = when {
-            dotCount > 0 && commaCount > 0 -> if (lastDot > lastComma) '.' else ','
-            dotCount == 1 -> resolveSingleSeparator(
-                value = cleaned,
-                separator = '.',
-                decimalSymbol = decimalSymbol,
-                groupingSymbol = groupingSymbol,
-            )
-            commaCount == 1 -> resolveSingleSeparator(
-                value = cleaned,
-                separator = ',',
-                decimalSymbol = decimalSymbol,
-                groupingSymbol = groupingSymbol,
-            )
-            dotCount > 1 || commaCount > 1 -> null
-            else -> null
-        }
+        val decimalSeparator: Char? =
+            when {
+                dotCount > 0 && commaCount > 0 -> if (lastDot > lastComma) '.' else ','
+                dotCount == 1 ->
+                    resolveSingleSeparator(
+                        value = cleaned,
+                        separator = '.',
+                        decimalSymbol = decimalSymbol,
+                        groupingSymbol = groupingSymbol,
+                    )
+                commaCount == 1 ->
+                    resolveSingleSeparator(
+                        value = cleaned,
+                        separator = ',',
+                        decimalSymbol = decimalSymbol,
+                        groupingSymbol = groupingSymbol,
+                    )
+                dotCount > 1 || commaCount > 1 -> null
+                else -> null
+            }
 
-        val normalized = if (decimalSeparator == null) {
-            val separators = cleaned.filter { it == '.' || it == ',' }
-            if (separators.isNotEmpty() && !hasValidGrouping(cleaned)) return null
-            cleaned.filter(Char::isDigit)
-        } else {
-            if (cleaned.count { it == decimalSeparator } != 1) return null
-            val pieces = cleaned.split(decimalSeparator)
-            if (pieces.size != 2) return null
-            if (!hasValidGrouping(pieces[0])) return null
-            val whole = pieces[0].filter(Char::isDigit)
-            val fraction = pieces[1]
-            if (fraction.length !in 1..2 || fraction.any { !it.isDigit() }) return null
-            "${whole.ifEmpty { "0" }}.${fraction.padEnd(2, '0')}"
-        }
+        val normalized =
+            if (decimalSeparator == null) {
+                val separators = cleaned.filter { it == '.' || it == ',' }
+                if (separators.isNotEmpty() && !hasValidGrouping(cleaned)) return null
+                cleaned.filter(Char::isDigit)
+            } else {
+                if (cleaned.count { it == decimalSeparator } != 1) return null
+                val pieces = cleaned.split(decimalSeparator)
+                if (pieces.size != 2) return null
+                if (!hasValidGrouping(pieces[0])) return null
+                val whole = pieces[0].filter(Char::isDigit)
+                val fraction = pieces[1]
+                if (fraction.length !in 1..2 || fraction.any { !it.isDigit() }) return null
+                "${whole.ifEmpty { "0" }}.${fraction.padEnd(2, '0')}"
+            }
 
         if (normalized.isEmpty()) return null
 

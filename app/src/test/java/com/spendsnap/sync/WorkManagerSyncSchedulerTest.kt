@@ -36,16 +36,18 @@ class WorkManagerSyncSchedulerTest {
     @Test
     fun repeatedImmediateSync_keepsOneUniqueWorkRequest() {
         scheduler.requestImmediateSync()
-        val firstId = WorkManager.getInstance(context)
-            .getWorkInfosForUniqueWork(SyncWorkNames.ONE_SHOT)
-            .get()
-            .single()
-            .id
+        val firstId =
+            WorkManager.getInstance(context)
+                .getWorkInfosForUniqueWork(SyncWorkNames.ONE_SHOT)
+                .get()
+                .single()
+                .id
 
         scheduler.requestImmediateSync()
-        val work = WorkManager.getInstance(context)
-            .getWorkInfosForUniqueWork(SyncWorkNames.ONE_SHOT)
-            .get()
+        val work =
+            WorkManager.getInstance(context)
+                .getWorkInfosForUniqueWork(SyncWorkNames.ONE_SHOT)
+                .get()
 
         assertThat(work).hasSize(1)
         assertThat(work.single().id).isEqualTo(firstId)
@@ -56,9 +58,10 @@ class WorkManagerSyncSchedulerTest {
         scheduler.ensurePeriodicSync()
         scheduler.ensurePeriodicSync()
 
-        val work = WorkManager.getInstance(context)
-            .getWorkInfosForUniqueWork(SyncWorkNames.PERIODIC)
-            .get()
+        val work =
+            WorkManager.getInstance(context)
+                .getWorkInfosForUniqueWork(SyncWorkNames.PERIODIC)
+                .get()
 
         assertThat(work).hasSize(1)
     }

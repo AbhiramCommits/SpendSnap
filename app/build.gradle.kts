@@ -1,3 +1,4 @@
+import io.gitlab.arturbosch.detekt.Detekt
 import java.util.Properties
 
 plugins {
@@ -9,6 +10,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ktlint)
+    alias(libs.plugins.detekt)
 }
 
 // Release identity is intentionally explicit. Bump both values for every Play upload.
@@ -16,13 +18,17 @@ val appVersionCode = 1
 val appVersionName = "1.0.0"
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
-val keystoreProperties = Properties().apply {
-    if (keystorePropertiesFile.exists()) {
-        keystorePropertiesFile.inputStream().use(::load)
+val keystoreProperties =
+    Properties().apply {
+        if (keystorePropertiesFile.exists()) {
+            keystorePropertiesFile.inputStream().use(::load)
+        }
     }
-}
 
-fun releaseSigningValue(envName: String, propertyName: String): String? =
+fun releaseSigningValue(
+    envName: String,
+    propertyName: String,
+): String? =
     System.getenv(envName)?.takeIf { it.isNotBlank() }
         ?: keystoreProperties.getProperty(propertyName)?.takeIf { it.isNotBlank() }
 
@@ -30,12 +36,13 @@ val releaseStoreFilePath = releaseSigningValue("SPENDSNAP_KEYSTORE_FILE", "store
 val releaseStorePassword = releaseSigningValue("SPENDSNAP_KEYSTORE_PASSWORD", "storePassword")
 val releaseKeyAlias = releaseSigningValue("SPENDSNAP_KEY_ALIAS", "keyAlias")
 val releaseKeyPassword = releaseSigningValue("SPENDSNAP_KEY_PASSWORD", "keyPassword")
-val hasReleaseSigning = listOf(
-    releaseStoreFilePath,
-    releaseStorePassword,
-    releaseKeyAlias,
-    releaseKeyPassword,
-).all { it != null }
+val hasReleaseSigning =
+    listOf(
+        releaseStoreFilePath,
+        releaseStorePassword,
+        releaseKeyAlias,
+        releaseKeyPassword,
+    ).all { it != null }
 
 android {
     namespace = "com.spendsnap"
@@ -124,6 +131,28 @@ kapt {
     correctErrorTypes = true
 }
 
+ktlint {
+    android.set(true)
+    filter {
+        exclude("**/generated/**")
+        exclude("**/build/**")
+    }
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+    baseline = rootProject.file("config/detekt/baseline.xml")
+}
+
+tasks.withType<Detekt>().configureEach {
+    jvmTarget = "17"
+    reports {
+        html.required.set(true)
+        xml.required.set(true)
+    }
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -173,6 +202,8 @@ dependencies {
     testImplementation(libs.androidx.work.testing)
 
     androidTestImplementation(libs.androidx.test.junit)
+    androidTestImplementation(libs.androidx.test.core.ktx)
+    androidTestImplementation(libs.truth)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.rules)
     androidTestImplementation(libs.androidx.test.espresso)

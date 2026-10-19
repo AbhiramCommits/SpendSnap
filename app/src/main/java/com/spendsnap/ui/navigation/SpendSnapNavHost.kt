@@ -39,9 +39,10 @@ fun SpendSnapNavHost() {
             if (showBottomBar) {
                 NavigationBar {
                     NavigationBarItem(
-                        selected = currentDestination?.hierarchy?.any {
-                            it.route == Route.Expenses.route
-                        } == true,
+                        selected =
+                            currentDestination?.hierarchy?.any {
+                                it.route == Route.Expenses.route
+                            } == true,
                         onClick = {
                             navController.navigate(Route.Expenses.route) {
                                 popUpTo(navController.graph.findStartDestination().id) {
@@ -55,17 +56,19 @@ fun SpendSnapNavHost() {
                             Icon(
                                 imageVector = Icons.Outlined.ReceiptLong,
                                 contentDescription = null,
-                                modifier = Modifier.semantics {
-                                    contentDescription = "Expenses tab"
-                                },
+                                modifier =
+                                    Modifier.semantics {
+                                        contentDescription = "Expenses tab"
+                                    },
                             )
                         },
                         label = { Text("Expenses") },
                     )
                     NavigationBarItem(
-                        selected = currentDestination?.hierarchy?.any {
-                            it.route == Route.Insights.route
-                        } == true,
+                        selected =
+                            currentDestination?.hierarchy?.any {
+                                it.route == Route.Insights.route
+                            } == true,
                         onClick = {
                             navController.navigate(Route.Insights.route) {
                                 popUpTo(navController.graph.findStartDestination().id) {
@@ -79,9 +82,10 @@ fun SpendSnapNavHost() {
                             Icon(
                                 imageVector = Icons.Outlined.Insights,
                                 contentDescription = null,
-                                modifier = Modifier.semantics {
-                                    contentDescription = "Insights tab"
-                                },
+                                modifier =
+                                    Modifier.semantics {
+                                        contentDescription = "Insights tab"
+                                    },
                             )
                         },
                         label = { Text("Insights") },
@@ -105,13 +109,14 @@ fun SpendSnapNavHost() {
             }
             composable(
                 route = Route.AddExpense.route,
-                arguments = listOf(
-                    navArgument("expenseId") {
-                        type = NavType.StringType
-                        nullable = true
-                        defaultValue = null
-                    },
-                ),
+                arguments =
+                    listOf(
+                        navArgument("expenseId") {
+                            type = NavType.StringType
+                            nullable = true
+                            defaultValue = null
+                        },
+                    ),
             ) { entry ->
                 AddExpenseScreen(
                     expenseId = entry.arguments?.getString("expenseId"),

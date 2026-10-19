@@ -25,13 +25,22 @@ data class AddExpenseUiState(
 
 sealed interface AddExpenseEvent {
     data class MerchantChanged(val value: String) : AddExpenseEvent
+
     data class AmountChanged(val value: String) : AddExpenseEvent
+
     data class CategorySelected(val categoryId: String) : AddExpenseEvent
+
     data class DateSelected(val occurredAt: Long) : AddExpenseEvent
+
     data class NoteChanged(val value: String) : AddExpenseEvent
+
     data class ReceiptCaptured(val uri: String) : AddExpenseEvent
+
     data class ImportCsv(val content: String) : AddExpenseEvent
+
     data object Save : AddExpenseEvent
+
     data object DismissError : AddExpenseEvent
+
     data object DismissImportReport : AddExpenseEvent
 }

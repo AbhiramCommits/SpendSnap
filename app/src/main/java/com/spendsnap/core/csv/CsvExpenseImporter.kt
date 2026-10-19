@@ -31,99 +31,104 @@ data class CsvImportResult(
  * Pure CSV parser. It accepts the header `date,merchant,amount,category`,
  * quoted merchant names, ISO dates, and falls back to Other for unknown categories.
  */
-class CsvExpenseImporter @Inject constructor() {
-    fun parse(
-        content: String,
-        categories: List<CategoryEntity>,
-        now: Long = System.currentTimeMillis(),
-    ): CsvImportResult {
-        if (content.isBlank()) {
-            return CsvImportResult(
-                expenses = emptyList(),
-                errors = listOf(CsvImportError(0, "CSV file is empty", "")),
-            )
-        }
-
-        val lines = content.removePrefix("\uFEFF").lineSequence().toList()
-        val categoryLookup = categories.associateBy { it.name.lowercase(Locale.US) }
-        val otherCategory = categoryLookup["other"]?.id ?: DatabaseSeeder.OTHER_CATEGORY_ID
-        val validExpenses = mutableListOf<ExpenseEntity>()
-        val errors = mutableListOf<CsvImportError>()
-
-        lines.forEachIndexed { index, rawLine ->
-            val lineNumber = index + 1
-            if (rawLine.isBlank()) return@forEachIndexed
-
-            val columns = splitCsvLine(rawLine)
-            if (index == 0 && columns.firstOrNull()?.trim().equals("date", ignoreCase = true)) {
-                return@forEachIndexed
-            }
-            if (columns.size != 4) {
-                errors += CsvImportError(
-                    lineNumber = lineNumber,
-                    message = "Expected 4 columns (date,merchant,amount,category), found ${columns.size}",
-                    row = rawLine,
+class CsvExpenseImporter
+    @Inject
+    constructor() {
+        fun parse(
+            content: String,
+            categories: List<CategoryEntity>,
+            now: Long = System.currentTimeMillis(),
+        ): CsvImportResult {
+            if (content.isBlank()) {
+                return CsvImportResult(
+                    expenses = emptyList(),
+                    errors = listOf(CsvImportError(0, "CSV file is empty", "")),
                 )
-                return@forEachIndexed
             }
 
-            val dateText = columns[0].trim()
-            val merchant = columns[1].trim()
-            val amountText = columns[2].trim()
-            val categoryText = columns[3].trim()
+            val lines = content.removePrefix("\uFEFF").lineSequence().toList()
+            val categoryLookup = categories.associateBy { it.name.lowercase(Locale.US) }
+            val otherCategory = categoryLookup["other"]?.id ?: DatabaseSeeder.OTHER_CATEGORY_ID
+            val validExpenses = mutableListOf<ExpenseEntity>()
+            val errors = mutableListOf<CsvImportError>()
 
-            val date = try {
-                LocalDate.parse(dateText)
-            } catch (_: DateTimeParseException) {
-                errors += CsvImportError(lineNumber, "Invalid date '$dateText' (use yyyy-MM-dd)", rawLine)
-                return@forEachIndexed
-            }
-            if (merchant.isEmpty()) {
-                errors += CsvImportError(lineNumber, "Merchant is required", rawLine)
-                return@forEachIndexed
-            }
-            val amountCents = AmountParser.parse(amountText, Locale.US)
-            if (amountCents == null) {
-                errors += CsvImportError(lineNumber, "Invalid amount '$amountText'", rawLine)
-                return@forEachIndexed
+            lines.forEachIndexed { index, rawLine ->
+                val lineNumber = index + 1
+                if (rawLine.isBlank()) return@forEachIndexed
+
+                val columns = splitCsvLine(rawLine)
+                if (index == 0 && columns.firstOrNull()?.trim().equals("date", ignoreCase = true)) {
+                    return@forEachIndexed
+                }
+                if (columns.size != 4) {
+                    errors +=
+                        CsvImportError(
+                            lineNumber = lineNumber,
+                            message = "Expected 4 columns (date,merchant,amount,category), found ${columns.size}",
+                            row = rawLine,
+                        )
+                    return@forEachIndexed
+                }
+
+                val dateText = columns[0].trim()
+                val merchant = columns[1].trim()
+                val amountText = columns[2].trim()
+                val categoryText = columns[3].trim()
+
+                val date =
+                    try {
+                        LocalDate.parse(dateText)
+                    } catch (_: DateTimeParseException) {
+                        errors += CsvImportError(lineNumber, "Invalid date '$dateText' (use yyyy-MM-dd)", rawLine)
+                        return@forEachIndexed
+                    }
+                if (merchant.isEmpty()) {
+                    errors += CsvImportError(lineNumber, "Merchant is required", rawLine)
+                    return@forEachIndexed
+                }
+                val amountCents = AmountParser.parse(amountText, Locale.US)
+                if (amountCents == null) {
+                    errors += CsvImportError(lineNumber, "Invalid amount '$amountText'", rawLine)
+                    return@forEachIndexed
+                }
+
+                val categoryId = categoryLookup[categoryText.lowercase(Locale.US)]?.id ?: otherCategory
+                validExpenses +=
+                    ExpenseEntity(
+                        merchant = merchant,
+                        amountCents = amountCents,
+                        categoryId = categoryId,
+                        occurredAt = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+                        note = "Imported from CSV",
+                        updatedAt = now,
+                    )
             }
 
-            val categoryId = categoryLookup[categoryText.lowercase(Locale.US)]?.id ?: otherCategory
-            validExpenses += ExpenseEntity(
-                merchant = merchant,
-                amountCents = amountCents,
-                categoryId = categoryId,
-                occurredAt = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli(),
-                note = "Imported from CSV",
-                updatedAt = now,
-            )
+            return CsvImportResult(validExpenses, errors)
         }
 
-        return CsvImportResult(validExpenses, errors)
-    }
-
-    private fun splitCsvLine(line: String): List<String> {
-        val columns = mutableListOf<String>()
-        val current = StringBuilder()
-        var quoted = false
-        var index = 0
-        while (index < line.length) {
-            val character = line[index]
-            when {
-                character == '"' && quoted && index + 1 < line.length && line[index + 1] == '"' -> {
-                    current.append('"')
-                    index += 1
+        private fun splitCsvLine(line: String): List<String> {
+            val columns = mutableListOf<String>()
+            val current = StringBuilder()
+            var quoted = false
+            var index = 0
+            while (index < line.length) {
+                val character = line[index]
+                when {
+                    character == '"' && quoted && index + 1 < line.length && line[index + 1] == '"' -> {
+                        current.append('"')
+                        index += 1
+                    }
+                    character == '"' -> quoted = !quoted
+                    character == ',' && !quoted -> {
+                        columns += current.toString()
+                        current.clear()
+                    }
+                    else -> current.append(character)
                 }
-                character == '"' -> quoted = !quoted
-                character == ',' && !quoted -> {
-                    columns += current.toString()
-                    current.clear()
-                }
-                else -> current.append(character)
+                index += 1
             }
-            index += 1
+            columns += current.toString()
+            return columns
         }
-        columns += current.toString()
-        return columns
     }
-}

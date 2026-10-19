@@ -3,7 +3,10 @@ package com.spendsnap.telemetry
 import android.util.Log
 
 class LoggingTelemetry : Telemetry {
-    override fun logEvent(name: String, params: Map<String, Any>) {
+    override fun logEvent(
+        name: String,
+        params: Map<String, Any>,
+    ) {
         Log.d(TAG, "event=$name params=$params")
     }
 
@@ -11,7 +14,10 @@ class LoggingTelemetry : Telemetry {
         Log.w(TAG, "non-fatal", throwable)
     }
 
-    override fun setUserProperty(name: String, value: String) {
+    override fun setUserProperty(
+        name: String,
+        value: String,
+    ) {
         Log.d(TAG, "userProperty=$name value=$value")
     }
 

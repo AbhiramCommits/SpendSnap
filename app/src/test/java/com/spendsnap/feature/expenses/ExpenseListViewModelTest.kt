@@ -6,9 +6,6 @@ import com.google.common.truth.Truth.assertThat
 import com.spendsnap.data.local.SyncState
 import com.spendsnap.data.local.entity.ExpenseEntity
 import com.spendsnap.testutil.FakeExpenseRepository
-import java.time.LocalDate
-import java.time.YearMonth
-import java.time.ZoneId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -18,6 +15,9 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.time.LocalDate
+import java.time.YearMonth
+import java.time.ZoneId
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ExpenseListViewModelTest {
@@ -34,45 +34,48 @@ class ExpenseListViewModelTest {
     }
 
     @Test
-    fun state_groupsByDay_andReportsMonthlyTotalAndPendingCount() = runTest(dispatcher) {
-        val repository = FakeExpenseRepository(initialExpenses = samples())
-        val viewModel = ExpenseListViewModel(repository)
+    fun state_groupsByDay_andReportsMonthlyTotalAndPendingCount() =
+        runTest(dispatcher) {
+            val repository = FakeExpenseRepository(initialExpenses = samples())
+            val viewModel = ExpenseListViewModel(repository)
 
-        viewModel.uiState.test {
-            val loaded = awaitMatching { !it.isLoading }
+            viewModel.uiState.test {
+                val loaded = awaitMatching { !it.isLoading }
 
-            assertThat(loaded.groups).hasSize(1)
-            assertThat(loaded.groups.single().items).hasSize(2)
-            assertThat(loaded.monthTotalCents).isEqualTo(2_200)
-            assertThat(loaded.pendingCount).isEqualTo(1)
-            assertThat(loaded.error).isNull()
-            assertThat(loaded.groups.single().items.first().categoryName).isEqualTo("MEALS")
-            cancelAndIgnoreRemainingEvents()
+                assertThat(loaded.groups).hasSize(1)
+                assertThat(loaded.groups.single().items).hasSize(2)
+                assertThat(loaded.monthTotalCents).isEqualTo(2_200)
+                assertThat(loaded.pendingCount).isEqualTo(1)
+                assertThat(loaded.error).isNull()
+                assertThat(loaded.groups.single().items.first().categoryName).isEqualTo("MEALS")
+                cancelAndIgnoreRemainingEvents()
+            }
         }
-    }
 
     @Test
-    fun previousMonthEvent_loadsOlderExpenses() = runTest(dispatcher) {
-        val repository = FakeExpenseRepository(initialExpenses = samples())
-        val viewModel = ExpenseListViewModel(repository)
-        val previous = YearMonth.now().minusMonths(1)
+    fun previousMonthEvent_loadsOlderExpenses() =
+        runTest(dispatcher) {
+            val repository = FakeExpenseRepository(initialExpenses = samples())
+            val viewModel = ExpenseListViewModel(repository)
+            val previous = YearMonth.now().minusMonths(1)
 
-        viewModel.uiState.test {
-            awaitMatching { !it.isLoading }
-            viewModel.onEvent(ExpenseListEvent.PreviousMonth)
+            viewModel.uiState.test {
+                awaitMatching { !it.isLoading }
+                viewModel.onEvent(ExpenseListEvent.PreviousMonth)
 
-            val earlier = awaitMatching { it.selectedMonth == previous }
-            assertThat(earlier.monthTotalCents).isEqualTo(500)
-            assertThat(earlier.groups.single().items.single().merchant).isEqualTo("Old Train")
-            cancelAndIgnoreRemainingEvents()
+                val earlier = awaitMatching { it.selectedMonth == previous }
+                assertThat(earlier.monthTotalCents).isEqualTo(500)
+                assertThat(earlier.groups.single().items.single().merchant).isEqualTo("Old Train")
+                cancelAndIgnoreRemainingEvents()
+            }
         }
-    }
 
     private fun samples(): List<ExpenseEntity> {
         val zone = ZoneId.systemDefault()
         val current = LocalDate.now().atTime(12, 0).atZone(zone).toInstant().toEpochMilli()
-        val old = LocalDate.now().minusMonths(1).atTime(12, 0)
-            .atZone(zone).toInstant().toEpochMilli()
+        val old =
+            LocalDate.now().minusMonths(1).atTime(12, 0)
+                .atZone(zone).toInstant().toEpochMilli()
         return listOf(
             ExpenseEntity(
                 id = "one",

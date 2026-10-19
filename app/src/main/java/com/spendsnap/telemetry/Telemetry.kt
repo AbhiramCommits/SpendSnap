@@ -1,9 +1,17 @@
 package com.spendsnap.telemetry
 
 interface Telemetry {
-    fun logEvent(name: String, params: Map<String, Any> = emptyMap())
+    fun logEvent(
+        name: String,
+        params: Map<String, Any> = emptyMap(),
+    )
+
     fun recordNonFatal(throwable: Throwable)
-    fun setUserProperty(name: String, value: String)
+
+    fun setUserProperty(
+        name: String,
+        value: String,
+    )
 }
 
 object TelemetryEvents {

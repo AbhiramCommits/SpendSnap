@@ -29,15 +29,16 @@ class DatabaseSeeder : RoomDatabase.Callback() {
     companion object {
         const val OTHER_CATEGORY_ID = "category-other"
 
-        val DEFAULT_CATEGORIES = listOf(
-            CategoryEntity("category-meals", "Meals", "#C8553D", true),
-            CategoryEntity("category-travel", "Travel", "#2F6F8F", true),
-            CategoryEntity("category-software", "Software", "#6B5CA5", true),
-            CategoryEntity("category-office", "Office", "#A06A2C", true),
-            CategoryEntity("category-marketing", "Marketing", "#B4477A", true),
-            CategoryEntity("category-hardware", "Hardware", "#3C7A52", true),
-            CategoryEntity("category-fees", "Fees", "#7B6250", true),
-            CategoryEntity(OTHER_CATEGORY_ID, "Other", "#6C757D", true),
-        )
+        val DEFAULT_CATEGORIES =
+            listOf(
+                CategoryEntity("category-meals", "Meals", "#C8553D", true),
+                CategoryEntity("category-travel", "Travel", "#2F6F8F", true),
+                CategoryEntity("category-software", "Software", "#6B5CA5", true),
+                CategoryEntity("category-office", "Office", "#A06A2C", true),
+                CategoryEntity("category-marketing", "Marketing", "#B4477A", true),
+                CategoryEntity("category-hardware", "Hardware", "#3C7A52", true),
+                CategoryEntity("category-fees", "Fees", "#7B6250", true),
+                CategoryEntity(OTHER_CATEGORY_ID, "Other", "#6C757D", true),
+            )
     }
 }

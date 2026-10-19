@@ -1,10 +1,10 @@
 package com.spendsnap.data.remote
 
-import java.io.IOException
-import java.util.UUID
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.io.IOException
+import java.util.UUID
 
 /**
  * In-process stand-in for the receipt service. It is idempotent on client UUID,
@@ -29,23 +29,25 @@ class FakeSpendSnapApi(
         }
     }
 
-    suspend fun allExpenses(): List<ExpenseDto> = mutex.withLock {
-        remoteExpenses.values.toList()
-    }
+    suspend fun allExpenses(): List<ExpenseDto> =
+        mutex.withLock {
+            remoteExpenses.values.toList()
+        }
 
     override suspend fun createExpense(
         clientUuid: String,
         expense: ExpenseDto,
     ): ExpenseDto {
         if (delayMillis > 0) delay(delayMillis)
-        val shouldFail = synchronized(this) {
-            if (failuresRemaining > 0) {
-                failuresRemaining -= 1
-                true
-            } else {
-                false
+        val shouldFail =
+            synchronized(this) {
+                if (failuresRemaining > 0) {
+                    failuresRemaining -= 1
+                    true
+                } else {
+                    false
+                }
             }
-        }
         if (shouldFail) throw IOException("Simulated network failure")
 
         return mutex.withLock {

@@ -31,10 +31,11 @@ fun LoadingState(
     label: String = "Loading",
 ) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(32.dp)
-            .semantics { contentDescription = label },
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(32.dp)
+                .semantics { contentDescription = label },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -53,9 +54,10 @@ fun EmptyState(
     onAction: (() -> Unit)? = null,
 ) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(32.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {

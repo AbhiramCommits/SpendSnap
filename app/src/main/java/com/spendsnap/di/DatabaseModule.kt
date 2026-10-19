@@ -20,13 +20,14 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(
         @ApplicationContext context: Context,
-    ): SpendSnapDatabase = Room.databaseBuilder(
-        context,
-        SpendSnapDatabase::class.java,
-        SpendSnapDatabase.NAME,
-    )
-        .addCallback(DatabaseSeeder())
-        .build()
+    ): SpendSnapDatabase =
+        Room.databaseBuilder(
+            context,
+            SpendSnapDatabase::class.java,
+            SpendSnapDatabase.NAME,
+        )
+            .addCallback(DatabaseSeeder())
+            .build()
 
     @Provides
     fun provideExpenseDao(database: SpendSnapDatabase): ExpenseDao = database.expenseDao()

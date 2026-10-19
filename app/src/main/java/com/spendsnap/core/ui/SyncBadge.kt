@@ -18,30 +18,35 @@ fun SyncBadge(
     state: SyncState,
     modifier: Modifier = Modifier,
 ) {
-    val (label, background, foreground) = when (state) {
-        SyncState.PENDING -> Triple(
-            "Pending",
-            MaterialTheme.colorScheme.tertiaryContainer,
-            MaterialTheme.colorScheme.onTertiaryContainer,
-        )
+    val (label, background, foreground) =
+        when (state) {
+            SyncState.PENDING ->
+                Triple(
+                    "Pending",
+                    MaterialTheme.colorScheme.tertiaryContainer,
+                    MaterialTheme.colorScheme.onTertiaryContainer,
+                )
 
-        SyncState.SYNCED -> Triple(
-            "Synced",
-            MaterialTheme.colorScheme.primaryContainer,
-            MaterialTheme.colorScheme.onPrimaryContainer,
-        )
+            SyncState.SYNCED ->
+                Triple(
+                    "Synced",
+                    MaterialTheme.colorScheme.primaryContainer,
+                    MaterialTheme.colorScheme.onPrimaryContainer,
+                )
 
-        SyncState.FAILED -> Triple(
-            "Retry",
-            MaterialTheme.colorScheme.errorContainer,
-            MaterialTheme.colorScheme.onErrorContainer,
-        )
-    }
+            SyncState.FAILED ->
+                Triple(
+                    "Retry",
+                    MaterialTheme.colorScheme.errorContainer,
+                    MaterialTheme.colorScheme.onErrorContainer,
+                )
+        }
 
     Surface(
-        modifier = modifier.semantics {
-            contentDescription = "Sync status: $label"
-        },
+        modifier =
+            modifier.semantics {
+                contentDescription = "Sync status: $label"
+            },
         color = background,
         contentColor = foreground,
         shape = RoundedCornerShape(50),

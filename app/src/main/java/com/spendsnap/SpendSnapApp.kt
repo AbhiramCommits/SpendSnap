@@ -16,9 +16,10 @@ class SpendSnapApp : Application(), Configuration.Provider {
     lateinit var syncScheduler: SyncScheduler
 
     override val workManagerConfiguration: Configuration
-        get() = Configuration.Builder()
-            .setWorkerFactory(workerFactory)
-            .build()
+        get() =
+            Configuration.Builder()
+                .setWorkerFactory(workerFactory)
+                .build()
 
     override fun onCreate() {
         super.onCreate()

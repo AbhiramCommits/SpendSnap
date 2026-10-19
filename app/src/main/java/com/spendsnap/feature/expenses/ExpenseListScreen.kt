@@ -49,10 +49,8 @@ import com.spendsnap.core.ui.ErrorBanner
 import com.spendsnap.core.ui.LoadingState
 import com.spendsnap.core.ui.MoneyText
 import com.spendsnap.core.ui.SyncBadge
-import java.time.Instant
 import java.time.LocalDate
 import java.time.YearMonth
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -101,17 +99,19 @@ fun ExpenseListContent(
                 actions = {
                     IconButton(
                         onClick = onPreviousMonth,
-                        modifier = Modifier.semantics {
-                            contentDescription = "Previous month"
-                        },
+                        modifier =
+                            Modifier.semantics {
+                                contentDescription = "Previous month"
+                            },
                     ) {
                         Icon(Icons.Outlined.ChevronLeft, contentDescription = null)
                     }
                     IconButton(
                         onClick = onNextMonth,
-                        modifier = Modifier.semantics {
-                            contentDescription = "Next month"
-                        },
+                        modifier =
+                            Modifier.semantics {
+                                contentDescription = "Next month"
+                            },
                     ) {
                         Icon(Icons.Outlined.ChevronRight, contentDescription = null)
                     }
@@ -128,59 +128,66 @@ fun ExpenseListContent(
         },
     ) { padding ->
         when {
-            state.isLoading -> LoadingState(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                label = "Loading expenses",
-            )
+            state.isLoading ->
+                LoadingState(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(padding),
+                    label = "Loading expenses",
+                )
 
-            else -> Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-            ) {
-                if (state.error != null) {
-                    ErrorBanner(
-                        message = state.error,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        onRetry = onDismissError,
-                    )
-                }
-                MonthSummary(state)
-                if (state.groups.isEmpty()) {
-                    EmptyState(
-                        modifier = Modifier
-                            .weight(1f)
-                            .testTag("expense_empty_state"),
-                        title = "No expenses yet",
-                        message = "Capture a receipt or import a CSV to see your monthly spend.",
-                        actionLabel = "Add your first expense",
-                        onAction = onAddExpense,
-                    )
-                } else {
-                    LazyColumn(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth(),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                            start = 16.dp,
-                            end = 16.dp,
-                            bottom = 100.dp,
-                        ),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        state.groups.forEach { group ->
-                            item(key = "header-${group.date}") {
-                                DayHeader(group)
-                            }
-                            items(group.items, key = { it.id }) { item ->
-                                ExpenseRow(item = item, onClick = { onExpenseClick(item.id) })
+            else ->
+                Column(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(padding),
+                ) {
+                    if (state.error != null) {
+                        ErrorBanner(
+                            message = state.error,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                            onRetry = onDismissError,
+                        )
+                    }
+                    MonthSummary(state)
+                    if (state.groups.isEmpty()) {
+                        EmptyState(
+                            modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .testTag("expense_empty_state"),
+                            title = "No expenses yet",
+                            message = "Capture a receipt or import a CSV to see your monthly spend.",
+                            actionLabel = "Add your first expense",
+                            onAction = onAddExpense,
+                        )
+                    } else {
+                        LazyColumn(
+                            modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .fillMaxWidth(),
+                            contentPadding =
+                                androidx.compose.foundation.layout.PaddingValues(
+                                    start = 16.dp,
+                                    end = 16.dp,
+                                    bottom = 100.dp,
+                                ),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            state.groups.forEach { group ->
+                                item(key = "header-${group.date}") {
+                                    DayHeader(group)
+                                }
+                                items(group.items, key = { it.id }) { item ->
+                                    ExpenseRow(item = item, onClick = { onExpenseClick(item.id) })
+                                }
                             }
                         }
                     }
                 }
-            }
         }
     }
 }
@@ -188,12 +195,14 @@ fun ExpenseListContent(
 @Composable
 private fun MonthSummary(state: ExpenseListUiState) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-        ),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+            ),
         shape = RoundedCornerShape(20.dp),
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
@@ -220,11 +229,12 @@ private fun MonthSummary(state: ExpenseListUiState) {
                 )
                 Spacer(Modifier.width(6.dp))
                 Text(
-                    text = if (allSynced) {
-                        "All changes synced"
-                    } else {
-                        "${state.pendingCount} waiting to sync"
-                    },
+                    text =
+                        if (allSynced) {
+                            "All changes synced"
+                        } else {
+                            "${state.pendingCount} waiting to sync"
+                        },
                     modifier = Modifier.testTag("pending_count"),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -237,9 +247,10 @@ private fun MonthSummary(state: ExpenseListUiState) {
 @Composable
 private fun DayHeader(group: ExpenseDayGroup) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 8.dp, bottom = 2.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp, bottom = 2.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -262,16 +273,18 @@ private fun ExpenseRow(
     onClick: () -> Unit,
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .testTag("expense_row_${item.id}"),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .testTag("expense_row_${item.id}"),
         shape = RoundedCornerShape(14.dp),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Surface(
@@ -281,9 +294,10 @@ private fun ExpenseRow(
                 Icon(
                     imageVector = Icons.AutoMirrored.Outlined.ReceiptLong,
                     contentDescription = null,
-                    modifier = Modifier
-                        .padding(10.dp)
-                        .size(20.dp),
+                    modifier =
+                        Modifier
+                            .padding(10.dp)
+                            .size(20.dp),
                     tint = MaterialTheme.colorScheme.primary,
                 )
             }
@@ -316,8 +330,7 @@ private fun ExpenseRow(
     }
 }
 
-private fun YearMonth.formatMonth(): String =
-    format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault()))
+private fun YearMonth.formatMonth(): String = format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault()))
 
 private fun LocalDate.formatDayHeader(): String {
     val today = LocalDate.now()

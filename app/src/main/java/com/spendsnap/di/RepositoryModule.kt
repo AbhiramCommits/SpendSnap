@@ -15,13 +15,9 @@ import javax.inject.Singleton
 abstract class RepositoryModule {
     @Binds
     @Singleton
-    abstract fun bindExpenseRepository(
-        repository: OfflineFirstExpenseRepository,
-    ): ExpenseRepository
+    abstract fun bindExpenseRepository(repository: OfflineFirstExpenseRepository): ExpenseRepository
 
     @Binds
     @Singleton
-    abstract fun bindSyncScheduler(
-        scheduler: WorkManagerSyncScheduler,
-    ): SyncScheduler
+    abstract fun bindSyncScheduler(scheduler: WorkManagerSyncScheduler): SyncScheduler
 }

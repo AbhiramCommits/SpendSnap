@@ -33,7 +33,10 @@ data class ExpenseListUiState(
 
 sealed interface ExpenseListEvent {
     data class MonthChanged(val month: YearMonth) : ExpenseListEvent
+
     data object PreviousMonth : ExpenseListEvent
+
     data object NextMonth : ExpenseListEvent
+
     data object DismissError : ExpenseListEvent
 }

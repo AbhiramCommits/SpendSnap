@@ -16,6 +16,7 @@ import com.spendsnap.data.local.entity.ExpenseEntity
 @TypeConverters(Converters::class)
 abstract class SpendSnapDatabase : RoomDatabase() {
     abstract fun expenseDao(): ExpenseDao
+
     abstract fun categoryDao(): CategoryDao
 
     companion object {

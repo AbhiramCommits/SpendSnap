@@ -9,7 +9,10 @@ class FakeTelemetry : Telemetry {
     val nonFatals = mutableListOf<Throwable>()
     val userProperties = mutableMapOf<String, String>()
 
-    override fun logEvent(name: String, params: Map<String, Any>) {
+    override fun logEvent(
+        name: String,
+        params: Map<String, Any>,
+    ) {
         events += Event(name, params)
     }
 
@@ -17,7 +20,10 @@ class FakeTelemetry : Telemetry {
         nonFatals += throwable
     }
 
-    override fun setUserProperty(name: String, value: String) {
+    override fun setUserProperty(
+        name: String,
+        value: String,
+    ) {
         userProperties[name] = value
     }
 }

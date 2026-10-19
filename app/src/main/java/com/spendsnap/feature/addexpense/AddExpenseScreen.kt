@@ -65,15 +65,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.spendsnap.core.ui.CategoryDot
 import com.spendsnap.core.ui.ErrorBanner
 import com.spendsnap.core.ui.LoadingState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,25 +89,27 @@ fun AddExpenseScreen(
     var pendingReceiptUri by rememberSaveable { mutableStateOf<String?>(null) }
     var showDatePicker by remember { mutableStateOf(false) }
 
-    val takePicture = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicture(),
-    ) { success ->
-        if (success) {
-            pendingReceiptUri?.let { viewModel.onEvent(AddExpenseEvent.ReceiptCaptured(it)) }
+    val takePicture =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.TakePicture(),
+        ) { success ->
+            if (success) {
+                pendingReceiptUri?.let { viewModel.onEvent(AddExpenseEvent.ReceiptCaptured(it)) }
+            }
         }
-    }
-    val openCsv = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument(),
-    ) { uri ->
-        if (uri != null) {
-            scope.launch {
-                val content = withContext(Dispatchers.IO) { readText(context, uri) }
-                if (content != null) {
-                    viewModel.onEvent(AddExpenseEvent.ImportCsv(content))
+    val openCsv =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.OpenDocument(),
+        ) { uri ->
+            if (uri != null) {
+                scope.launch {
+                    val content = withContext(Dispatchers.IO) { readText(context, uri) }
+                    if (content != null) {
+                        viewModel.onEvent(AddExpenseEvent.ImportCsv(content))
+                    }
                 }
             }
         }
-    }
 
     LaunchedEffect(state.saved) {
         if (state.saved) onSaved()
@@ -130,16 +132,18 @@ fun AddExpenseScreen(
     ) { padding ->
         if (state.isLoading) {
             LoadingState(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(padding),
                 label = "Loading expense form",
             )
         } else {
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(padding),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
@@ -157,10 +161,11 @@ fun AddExpenseScreen(
                         onValueChange = {
                             viewModel.onEvent(AddExpenseEvent.MerchantChanged(it))
                         },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("merchant_field")
-                            .semantics { contentDescription = "Merchant name" },
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .testTag("merchant_field")
+                                .semantics { contentDescription = "Merchant name" },
                         label = { Text("Merchant") },
                         singleLine = true,
                         isError = state.merchantError != null,
@@ -177,10 +182,11 @@ fun AddExpenseScreen(
                         onValueChange = {
                             viewModel.onEvent(AddExpenseEvent.AmountChanged(it))
                         },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("amount_field")
-                            .semantics { contentDescription = "Amount in dollars" },
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .testTag("amount_field")
+                                .semantics { contentDescription = "Amount in dollars" },
                         label = { Text("Amount") },
                         prefix = { Text("$") },
                         singleLine = true,
@@ -217,11 +223,12 @@ fun AddExpenseScreen(
                 }
                 item {
                     Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { showDatePicker = true }
-                            .testTag("date_picker_button")
-                            .semantics { contentDescription = "Expense date" },
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable { showDatePicker = true }
+                                .testTag("date_picker_button")
+                                .semantics { contentDescription = "Expense date" },
                         shape = RoundedCornerShape(12.dp),
                         color = MaterialTheme.colorScheme.surfaceVariant,
                     ) {
@@ -253,9 +260,10 @@ fun AddExpenseScreen(
                     OutlinedTextField(
                         value = state.note,
                         onValueChange = { viewModel.onEvent(AddExpenseEvent.NoteChanged(it)) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("note_field"),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .testTag("note_field"),
                         label = { Text("Note (optional)") },
                         minLines = 2,
                         maxLines = 4,
@@ -331,9 +339,10 @@ fun AddExpenseScreen(
                 item {
                     Button(
                         onClick = { viewModel.onEvent(AddExpenseEvent.Save) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("save_expense_button"),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .testTag("save_expense_button"),
                         enabled = !state.isSaving && !state.isImporting,
                     ) {
                         Text(if (state.isSaving) "Saving..." else "Save expense")
@@ -352,9 +361,10 @@ fun AddExpenseScreen(
                     onClick = {
                         val selected = pickerState.selectedDateMillis
                         if (selected != null) {
-                            val localDate = Instant.ofEpochMilli(selected)
-                                .atZone(ZoneOffset.UTC)
-                                .toLocalDate()
+                            val localDate =
+                                Instant.ofEpochMilli(selected)
+                                    .atZone(ZoneOffset.UTC)
+                                    .toLocalDate()
                             viewModel.onEvent(
                                 AddExpenseEvent.DateSelected(
                                     localDate.atStartOfDay(ZoneId.systemDefault())
@@ -410,6 +420,10 @@ private fun createReceiptUri(context: Context): Uri {
     )
 }
 
-private fun readText(context: Context, uri: Uri): String? = runCatching {
-    context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
-}.getOrNull()
+private fun readText(
+    context: Context,
+    uri: Uri,
+): String? =
+    runCatching {
+        context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+    }.getOrNull()
