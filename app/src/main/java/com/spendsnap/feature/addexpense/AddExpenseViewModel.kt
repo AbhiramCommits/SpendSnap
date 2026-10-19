@@ -7,6 +7,8 @@ import com.spendsnap.core.amount.AmountParser
 import com.spendsnap.core.csv.CsvExpenseImporter
 import com.spendsnap.data.local.entity.ExpenseEntity
 import com.spendsnap.data.repository.ExpenseRepository
+import com.spendsnap.telemetry.Telemetry
+import com.spendsnap.telemetry.TelemetryEvents
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.util.Locale
@@ -24,6 +26,7 @@ class AddExpenseViewModel @Inject constructor(
     private val repository: ExpenseRepository,
     savedStateHandle: SavedStateHandle,
     private val csvImporter: CsvExpenseImporter,
+    private val telemetry: Telemetry,
 ) : ViewModel() {
     private val initialExpenseId: String? = savedStateHandle["expenseId"]
     private val _uiState = MutableStateFlow(
@@ -118,20 +121,33 @@ class AddExpenseViewModel @Inject constructor(
         }
 
         val cents = requireNotNull(amountCents)
+        val expense = ExpenseEntity(
+            id = state.expenseId ?: UUID.randomUUID().toString(),
+            merchant = merchant,
+            amountCents = cents,
+            categoryId = state.selectedCategoryId,
+            occurredAt = state.occurredAt,
+            note = state.note.trim(),
+            receiptUri = state.receiptUri,
+        )
         _uiState.update { it.copy(isSaving = true, formError = null) }
         viewModelScope.launch {
             try {
-                repository.upsert(
-                    ExpenseEntity(
-                        id = state.expenseId ?: UUID.randomUUID().toString(),
-                        merchant = merchant,
-                        amountCents = cents,
-                        categoryId = state.selectedCategoryId,
-                        occurredAt = state.occurredAt,
-                        note = state.note.trim(),
-                        receiptUri = state.receiptUri,
+                repository.upsert(expense)
+                telemetry.logEvent(
+                    TelemetryEvents.EXPENSE_CREATED,
+                    mapOf(
+                        "amount_cents" to cents,
+                        "category_id" to state.selectedCategoryId,
+                        "has_receipt" to (state.receiptUri != null),
                     ),
                 )
+                if (state.receiptUri != null) {
+                    telemetry.logEvent(
+                        TelemetryEvents.RECEIPT_CAPTURED,
+                        mapOf("expense_id" to expense.id),
+                    )
+                }
                 _uiState.update { it.copy(isSaving = false, saved = true) }
             } catch (cancellation: CancellationException) {
                 throw cancellation
@@ -159,6 +175,14 @@ class AddExpenseViewModel @Inject constructor(
                 if (result.expenses.isNotEmpty()) {
                     repository.upsertAll(result.expenses)
                 }
+                telemetry.logEvent(
+                    TelemetryEvents.CSV_IMPORTED,
+                    mapOf(
+                        "valid_count" to result.validCount,
+                        "invalid_count" to result.errors.size,
+                        "total_count" to (result.validCount + result.errors.size),
+                    ),
+                )
                 _uiState.update {
                     it.copy(
                         isImporting = false,

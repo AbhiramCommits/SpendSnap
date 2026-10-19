@@ -7,6 +7,7 @@ import com.spendsnap.core.csv.CsvExpenseImporter
 import com.spendsnap.data.local.SyncState
 import com.spendsnap.feature.expenses.awaitMatching
 import com.spendsnap.testutil.FakeExpenseRepository
+import com.spendsnap.testutil.FakeTelemetry
 import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -35,6 +36,7 @@ class AddExpenseViewModelTest {
             repository = repository,
             savedStateHandle = SavedStateHandle(),
             csvImporter = CsvExpenseImporter(),
+            telemetry = FakeTelemetry(),
         )
     }
 

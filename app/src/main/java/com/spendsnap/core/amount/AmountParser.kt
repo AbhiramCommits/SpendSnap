@@ -16,9 +16,13 @@ object AmountParser {
     fun parse(raw: String, locale: Locale = Locale.getDefault()): Long? {
         if (raw.isBlank()) return null
 
+        val symbols = DecimalFormatSymbols.getInstance(locale)
         val cleaned = buildString {
-            raw.trim().forEach { character ->
+            raw.trim().forEach { original ->
+                val character = normalizeDigit(original)
                 when {
+                    character == symbols.decimalSeparator -> append('.')
+                    character == symbols.groupingSeparator -> append(',')
                     character in whitespace -> Unit
                     character in allowedCurrencyMarks -> Unit
                     character == '\'' -> Unit
@@ -30,7 +34,6 @@ object AmountParser {
         if (cleaned.any { !it.isDigit() && it != '.' && it != ',' }) return null
         if (cleaned.none(Char::isDigit)) return null
 
-        val symbols = DecimalFormatSymbols.getInstance(locale)
         val decimalSymbol = symbols.decimalSeparator
         val groupingSymbol = symbols.groupingSeparator
 
@@ -86,6 +89,11 @@ object AmountParser {
      * which may have one to three. This rejects inputs such as 12.3456 while
      * still accepting 1,234.56 and 1.234.567.
      */
+    private fun normalizeDigit(character: Char): Char {
+        val digit = Character.digit(character, 10)
+        return if (digit in 0..9) ('0' + digit) else character
+    }
+
     private fun hasValidGrouping(integerPart: String): Boolean {
         if (integerPart.none { it == '.' || it == ',' }) {
             return integerPart.all(Char::isDigit)

@@ -2,8 +2,8 @@ package com.spendsnap.di
 
 import com.spendsnap.data.repository.ExpenseRepository
 import com.spendsnap.data.repository.OfflineFirstExpenseRepository
-import com.spendsnap.sync.NoOpSyncScheduler
 import com.spendsnap.sync.SyncScheduler
+import com.spendsnap.sync.WorkManagerSyncScheduler
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -22,6 +22,6 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindSyncScheduler(
-        scheduler: NoOpSyncScheduler,
+        scheduler: WorkManagerSyncScheduler,
     ): SyncScheduler
 }

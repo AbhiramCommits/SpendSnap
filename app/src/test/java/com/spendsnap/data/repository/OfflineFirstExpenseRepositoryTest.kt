@@ -12,6 +12,9 @@ import com.spendsnap.data.remote.FakeSpendSnapApi
 import com.spendsnap.sync.SyncScheduler
 import java.time.YearMonth
 import java.time.ZoneId
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -125,6 +128,42 @@ class OfflineFirstExpenseRepositoryTest {
         assertThat(meals.expenseCount).isEqualTo(2)
         assertThat(travel.totalCents).isEqualTo(1_234)
         assertThat(repository.observeMonthlyTotal(month).first()).isEqualTo(4_237)
+    }
+
+    @Test
+    fun concurrentSync_uploadsExactlyOnce_andLeavesOneKeyedRow() = runBlocking {
+        val expense = expense(merchant = "Concurrent Cafe", amountCents = 1_500)
+        repository.upsert(expense)
+
+        val results = coroutineScope {
+            listOf(
+                async { repository.syncPending() },
+                async { repository.syncPending() },
+            ).awaitAll()
+        }
+
+        assertThat(results.sumOf { it.syncedCount }).isAtLeast(1)
+        assertThat(api.allExpenses()).hasSize(1)
+        assertThat(database.expenseDao().count()).isEqualTo(1)
+        val stored = database.expenseDao().getById(expense.id)
+        assertThat(stored?.syncState).isEqualTo(SyncState.SYNCED)
+        assertThat(stored?.remoteId).isEqualTo(api.allExpenses().single().remoteId)
+
+        val thirdRun = repository.syncPending()
+        assertThat(thirdRun.syncedCount).isEqualTo(0)
+        assertThat(api.allExpenses()).hasSize(1)
+    }
+
+    @Test
+    fun repeatedUpsertForKeyedUuid_updatesInsteadOfDuplicating() = runBlocking {
+        val expense = expense(merchant = "Draft Name", amountCents = 1_000)
+        repository.upsert(expense)
+        repository.upsert(expense.copy(merchant = "Final Name", amountCents = 2_000))
+
+        assertThat(database.expenseDao().count()).isEqualTo(1)
+        val stored = database.expenseDao().getById(expense.id)
+        assertThat(stored?.merchant).isEqualTo("Final Name")
+        assertThat(stored?.amountCents).isEqualTo(2_000)
     }
 
     private fun expense(

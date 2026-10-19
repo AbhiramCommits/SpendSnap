@@ -22,6 +22,9 @@ class FakeExpenseRepository(
     val categories = MutableStateFlow(initialCategories)
     val upserted = mutableListOf<ExpenseEntity>()
     val deletedIds = mutableListOf<String>()
+    val queuedSyncResults = ArrayDeque<SyncResult>()
+    var syncError: Exception? = null
+    var syncCalls: Int = 0
 
     override fun observeExpenses(): Flow<List<ExpenseEntity>> = expenses
 
@@ -72,8 +75,12 @@ class FakeExpenseRepository(
         expenses.update { rows -> rows.filterNot { it.id == id } }
     }
 
-    override suspend fun syncPending(): SyncResult =
-        SyncResult(syncedCount = 0, failedCount = 0, remainingCount = 0)
+    override suspend fun syncPending(): SyncResult {
+        syncCalls += 1
+        syncError?.let { throw it }
+        return queuedSyncResults.removeFirstOrNull()
+            ?: SyncResult(syncedCount = 0, failedCount = 0, remainingCount = 0)
+    }
 
     private fun ExpenseEntity.inMonth(yearMonth: YearMonth): Boolean = YearMonth.from(
         Instant.ofEpochMilli(occurredAt).atZone(ZoneId.systemDefault()).toLocalDate(),

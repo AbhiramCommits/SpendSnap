@@ -56,6 +56,17 @@ class AmountParserTest {
     }
 
     @Test
+    fun localeSpecificDecimalSeparator_isSupported() {
+        assertThat(AmountParser.parse("12\u066B50", Locale.forLanguageTag("ar-EG"))).isEqualTo(1_250)
+    }
+
+    @Test
+    fun arabicIndicDigits_areSupported() {
+        assertThat(AmountParser.parse("\u0661\u0662\u066B\u0665\u0660", Locale.forLanguageTag("ar-EG")))
+            .isEqualTo(1_250)
+    }
+
+    @Test
     fun tooManyFractionDigits_areRejectedInsteadOfSilentlyRounded() {
         assertThat(AmountParser.parse("12.345", Locale.US)).isNotNull()
         assertThat(AmountParser.parse("12.3456", Locale.US)).isNull()
