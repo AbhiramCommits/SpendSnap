@@ -16,12 +16,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.TrendingDown
+import androidx.compose.material.icons.automirrored.outlined.TrendingFlat
+import androidx.compose.material.icons.automirrored.outlined.TrendingUp
 import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.CloudUpload
-import androidx.compose.material.icons.outlined.TrendingDown
-import androidx.compose.material.icons.outlined.TrendingFlat
-import androidx.compose.material.icons.outlined.TrendingUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -47,6 +48,7 @@ import com.spendsnap.core.ui.ErrorBanner
 import com.spendsnap.core.ui.LoadingState
 import com.spendsnap.core.ui.MoneyText
 import com.spendsnap.core.ui.parseColor
+import com.spendsnap.ui.theme.SpendSnapTheme
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -84,23 +86,17 @@ fun InsightsContent(
                     }
                 },
                 actions = {
-                    IconButton(
-                        onClick = onPreviousMonth,
-                        modifier =
-                            Modifier.semantics {
-                                contentDescription = "Previous month insights"
-                            },
-                    ) {
-                        Icon(Icons.Outlined.ChevronLeft, contentDescription = null)
+                    IconButton(onClick = onPreviousMonth) {
+                        Icon(
+                            Icons.Outlined.ChevronLeft,
+                            contentDescription = "Previous month insights",
+                        )
                     }
-                    IconButton(
-                        onClick = onNextMonth,
-                        modifier =
-                            Modifier.semantics {
-                                contentDescription = "Next month insights"
-                            },
-                    ) {
-                        Icon(Icons.Outlined.ChevronRight, contentDescription = null)
+                    IconButton(onClick = onNextMonth) {
+                        Icon(
+                            Icons.Outlined.ChevronRight,
+                            contentDescription = "Next month insights",
+                        )
                     }
                 },
             )
@@ -190,7 +186,7 @@ private fun InsightsBody(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         Icons.Outlined.CloudUpload,
-                        contentDescription = null,
+                        contentDescription = "Pending sync",
                         modifier = Modifier.size(18.dp),
                         tint = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
@@ -245,10 +241,10 @@ private fun MonthDelta(data: InsightsData) {
     val delta = data.monthOverMonthPercent
     val icon =
         when {
-            delta == null -> Icons.Outlined.TrendingFlat
-            delta > 0 -> Icons.Outlined.TrendingUp
-            delta < 0 -> Icons.Outlined.TrendingDown
-            else -> Icons.Outlined.TrendingFlat
+            delta == null -> Icons.AutoMirrored.Outlined.TrendingFlat
+            delta > 0 -> Icons.AutoMirrored.Outlined.TrendingUp
+            delta < 0 -> Icons.AutoMirrored.Outlined.TrendingDown
+            else -> Icons.AutoMirrored.Outlined.TrendingFlat
         }
     val text =
         when {
@@ -260,7 +256,7 @@ private fun MonthDelta(data: InsightsData) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(
             icon,
-            contentDescription = null,
+            contentDescription = "Month over month trend",
             modifier = Modifier.size(20.dp),
             tint = MaterialTheme.colorScheme.onPrimaryContainer,
         )
@@ -324,3 +320,52 @@ private fun CategoryBar(category: CategorySpendUi) {
 }
 
 private fun YearMonth.formatMonth(): String = format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault()))
+
+@Preview(name = "Insights light", showBackground = true)
+@Composable
+fun InsightsLightPreview() {
+    SpendSnapTheme(darkTheme = false) {
+        InsightsContent(
+            state = previewInsightsState(),
+            onPreviousMonth = {},
+            onNextMonth = {},
+        )
+    }
+}
+
+@Preview(name = "Insights dark", showBackground = true)
+@Composable
+fun InsightsDarkPreview() {
+    SpendSnapTheme(darkTheme = true) {
+        InsightsContent(
+            state = previewInsightsState(),
+            onPreviousMonth = {},
+            onNextMonth = {},
+        )
+    }
+}
+
+private fun previewInsightsState() =
+    InsightsUiState(
+        isLoading = false,
+        selectedMonth = YearMonth.now(),
+        data =
+            InsightsData(
+                totalCents = 123_456,
+                previousMonthTotalCents = 100_000,
+                monthOverMonthPercent = 23.456,
+                categorySpend =
+                    listOf(
+                        CategorySpendUi("category-travel", "Travel", "#2F6F8F", 70_000, 0.57f),
+                        CategorySpendUi("category-meals", "Meals", "#C8553D", 33_456, 0.27f),
+                        CategorySpendUi("category-software", "Software", "#6B5CA5", 20_000, 0.16f),
+                    ),
+                topMerchants =
+                    listOf(
+                        MerchantSpendUi("Airline", 70_000),
+                        MerchantSpendUi("Corner Cafe", 33_456),
+                        MerchantSpendUi("Cloud Co", 20_000),
+                    ),
+                pendingCount = 2,
+            ),
+    )

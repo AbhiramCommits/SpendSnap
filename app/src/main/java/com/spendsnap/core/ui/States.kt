@@ -63,7 +63,7 @@ fun EmptyState(
     ) {
         Icon(
             imageVector = Icons.Outlined.Info,
-            contentDescription = null,
+            contentDescription = "Information",
             tint = MaterialTheme.colorScheme.primary,
         )
         Spacer(Modifier.height(12.dp))
@@ -100,7 +100,7 @@ fun ErrorBanner(
         ) {
             Icon(
                 imageVector = Icons.Outlined.WarningAmber,
-                contentDescription = null,
+                contentDescription = "Warning",
             )
             Spacer(Modifier.width(12.dp))
             Text(

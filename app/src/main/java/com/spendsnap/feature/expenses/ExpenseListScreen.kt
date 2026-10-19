@@ -37,9 +37,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -49,6 +48,8 @@ import com.spendsnap.core.ui.ErrorBanner
 import com.spendsnap.core.ui.LoadingState
 import com.spendsnap.core.ui.MoneyText
 import com.spendsnap.core.ui.SyncBadge
+import com.spendsnap.data.local.SyncState
+import com.spendsnap.ui.theme.SpendSnapTheme
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -97,23 +98,17 @@ fun ExpenseListContent(
                     }
                 },
                 actions = {
-                    IconButton(
-                        onClick = onPreviousMonth,
-                        modifier =
-                            Modifier.semantics {
-                                contentDescription = "Previous month"
-                            },
-                    ) {
-                        Icon(Icons.Outlined.ChevronLeft, contentDescription = null)
+                    IconButton(onClick = onPreviousMonth) {
+                        Icon(
+                            Icons.Outlined.ChevronLeft,
+                            contentDescription = "Previous month",
+                        )
                     }
-                    IconButton(
-                        onClick = onNextMonth,
-                        modifier =
-                            Modifier.semantics {
-                                contentDescription = "Next month"
-                            },
-                    ) {
-                        Icon(Icons.Outlined.ChevronRight, contentDescription = null)
+                    IconButton(onClick = onNextMonth) {
+                        Icon(
+                            Icons.Outlined.ChevronRight,
+                            contentDescription = "Next month",
+                        )
                     }
                 },
             )
@@ -122,7 +117,7 @@ fun ExpenseListContent(
             ExtendedFloatingActionButton(
                 onClick = onAddExpense,
                 modifier = Modifier.testTag("add_expense_fab"),
-                icon = { Icon(Icons.Filled.Add, contentDescription = null) },
+                icon = { Icon(Icons.Filled.Add, contentDescription = "Add expense") },
                 text = { Text("Add expense") },
             )
         },
@@ -223,7 +218,7 @@ private fun MonthSummary(state: ExpenseListUiState) {
                 val allSynced = state.pendingCount == 0
                 Icon(
                     imageVector = if (allSynced) Icons.Outlined.CloudDone else Icons.Outlined.CloudUpload,
-                    contentDescription = null,
+                    contentDescription = if (allSynced) "Synced" else "Pending sync",
                     modifier = Modifier.size(18.dp),
                     tint = MaterialTheme.colorScheme.onPrimaryContainer,
                 )
@@ -293,7 +288,7 @@ private fun ExpenseRow(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Outlined.ReceiptLong,
-                    contentDescription = null,
+                    contentDescription = "Receipt",
                     modifier =
                         Modifier
                             .padding(10.dp)
@@ -339,4 +334,76 @@ private fun LocalDate.formatDayHeader(): String {
         today.minusDays(1) -> "Yesterday"
         else -> format(DateTimeFormatter.ofPattern("EEE, MMM d", Locale.getDefault()))
     }
+}
+
+@Preview(name = "Expenses light", showBackground = true)
+@Composable
+fun ExpenseListLightPreview() {
+    SpendSnapTheme(darkTheme = false) {
+        ExpenseListContent(
+            state = previewExpenseListState(),
+            onAddExpense = {},
+            onExpenseClick = {},
+            onPreviousMonth = {},
+            onNextMonth = {},
+            onDismissError = {},
+        )
+    }
+}
+
+@Preview(name = "Expenses dark", showBackground = true)
+@Composable
+fun ExpenseListDarkPreview() {
+    SpendSnapTheme(darkTheme = true) {
+        ExpenseListContent(
+            state = previewExpenseListState(),
+            onAddExpense = {},
+            onExpenseClick = {},
+            onPreviousMonth = {},
+            onNextMonth = {},
+            onDismissError = {},
+        )
+    }
+}
+
+private fun previewExpenseListState(): ExpenseListUiState {
+    val today = LocalDate.now()
+    return ExpenseListUiState(
+        isLoading = false,
+        selectedMonth = YearMonth.now(),
+        groups =
+            listOf(
+                ExpenseDayGroup(
+                    date = today,
+                    totalCents = 4_298,
+                    items =
+                        listOf(
+                            ExpenseListItemUi(
+                                id = "preview-1",
+                                merchant = "Corner Cafe",
+                                amountCents = 1_298,
+                                currency = "USD",
+                                categoryId = "category-meals",
+                                categoryName = "MEALS",
+                                categoryColorHex = "#C8553D",
+                                occurredAt = System.currentTimeMillis(),
+                                syncState = SyncState.PENDING,
+                            ),
+                            ExpenseListItemUi(
+                                id = "preview-2",
+                                merchant = "Northwind Books",
+                                amountCents = 3_000,
+                                currency = "USD",
+                                categoryId = "category-office",
+                                categoryName = "OFFICE",
+                                categoryColorHex = "#A06A2C",
+                                occurredAt = System.currentTimeMillis(),
+                                syncState = SyncState.SYNCED,
+                            ),
+                        ),
+                ),
+            ),
+        monthTotalCents = 4_298,
+        pendingCount = 1,
+    )
 }

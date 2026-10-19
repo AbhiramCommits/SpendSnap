@@ -18,9 +18,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ReceiptLong
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.ReceiptLong
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -45,6 +45,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -54,6 +55,8 @@ import com.spendsnap.core.ui.ErrorBanner
 import com.spendsnap.core.ui.LoadingState
 import com.spendsnap.core.ui.MoneyText
 import com.spendsnap.core.ui.SyncBadge
+import com.spendsnap.data.local.SyncState
+import com.spendsnap.ui.theme.SpendSnapTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.Instant
@@ -61,7 +64,6 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExpenseDetailScreen(
     expenseId: String,
@@ -71,11 +73,30 @@ fun ExpenseDetailScreen(
     viewModel: ExpenseDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    var showDeleteDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.deleted) {
         if (state.deleted) onDeleted()
     }
+
+    ExpenseDetailContent(
+        expenseId = expenseId,
+        state = state,
+        onBack = onBack,
+        onEdit = onEdit,
+        onDelete = viewModel::delete,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ExpenseDetailContent(
+    expenseId: String,
+    state: ExpenseDetailUiState,
+    onBack: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier =
@@ -179,9 +200,7 @@ fun ExpenseDetailScreen(
                                 )
                                 Spacer(Modifier.width(12.dp))
                                 SyncBadge(
-                                    state =
-                                        state.expense?.syncState
-                                            ?: com.spendsnap.data.local.SyncState.PENDING,
+                                    state = state.expense?.syncState ?: SyncState.PENDING,
                                     modifier = Modifier.testTag("detail_sync_badge"),
                                 )
                             }
@@ -220,8 +239,8 @@ fun ExpenseDetailScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                             ) {
                                 Icon(
-                                    Icons.Outlined.ReceiptLong,
-                                    contentDescription = null,
+                                    Icons.AutoMirrored.Outlined.ReceiptLong,
+                                    contentDescription = "No receipt attached",
                                     modifier = Modifier.size(36.dp),
                                 )
                                 Spacer(Modifier.height(8.dp))
@@ -248,7 +267,7 @@ fun ExpenseDetailScreen(
                 TextButton(
                     onClick = {
                         showDeleteDialog = false
-                        viewModel.delete()
+                        onDelete()
                     },
                 ) { Text("Delete") }
             },
@@ -302,3 +321,49 @@ private fun ReceiptThumbnail(uri: String) {
         }
     }
 }
+
+@Preview(name = "Expense detail light", showBackground = true)
+@Composable
+fun ExpenseDetailLightPreview() {
+    SpendSnapTheme(darkTheme = false) {
+        ExpenseDetailContent(
+            expenseId = "preview",
+            state = previewDetailState(),
+            onBack = {},
+            onEdit = {},
+            onDelete = {},
+        )
+    }
+}
+
+@Preview(name = "Expense detail dark", showBackground = true)
+@Composable
+fun ExpenseDetailDarkPreview() {
+    SpendSnapTheme(darkTheme = true) {
+        ExpenseDetailContent(
+            expenseId = "preview",
+            state = previewDetailState(),
+            onBack = {},
+            onEdit = {},
+            onDelete = {},
+        )
+    }
+}
+
+private fun previewDetailState() =
+    ExpenseDetailUiState(
+        isLoading = false,
+        expense =
+            ExpenseDetailUi(
+                id = "preview",
+                merchant = "Northwind Books",
+                amountCents = 4_250,
+                currency = "USD",
+                categoryName = "Office",
+                categoryColorHex = "#A06A2C",
+                occurredAt = System.currentTimeMillis(),
+                note = "Reference book for the team",
+                receiptUri = null,
+                syncState = SyncState.PENDING,
+            ),
+    )

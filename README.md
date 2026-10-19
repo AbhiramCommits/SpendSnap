@@ -147,10 +147,10 @@ Command:
 ```
 
 - Result: **BUILD SUCCESSFUL**
-- Wall clock: **38.51 s** (`real 38.51`; Gradle reported `BUILD SUCCESSFUL in 38s`)
+- Wall clock: **42.38 s** (`real 42.38`; Gradle reported `BUILD SUCCESSFUL in 41s`)
 - Test count: **41**
 - Pass rate: **41/41 = 100%**, 0 failures, 0 skipped
-- JUnit-reported test execution time: **3.536 s**
+- JUnit-reported test execution time: **3.737 s**
 
 | Test class | Tests |
 |---|---:|
@@ -177,8 +177,8 @@ Command:
 - Result: **BUILD SUCCESSFUL**
 - Environment: local `SpendSnapApi34` AVD, API 34, `google_apis`, arm64-v8a
 - Tests: **5 passed, 0 failed, 0 skipped**
-- JUnit-reported execution time: **8.211 s**
-- Gradle task wall clock: **36 s**
+- JUnit-reported execution time: **7.623 s**
+- Gradle task wall clock: **32 s**
 
 | Class | Tests | Coverage |
 |---|---:|---|
@@ -200,7 +200,7 @@ Command:
 
 - Result: **BUILD SUCCESSFUL**
 - Artifact: `app/build/outputs/bundle/release/app-release.aab`
-- Size: **6,666,773 bytes = 6.36 MiB (about 6.4 MB)**
+- Size: **6,665,298 bytes = 6.36 MiB (about 6.4 MB)**
 - Signature: **unsigned locally** because no keystore was configured. CI signs the
   same artifact when the keystore secrets are present.
 - R8 mapping: `app/build/outputs/mapping/release/mapping.txt`
@@ -214,6 +214,8 @@ Static analysis also passed:
 - `ktlintCheck`: passed
 - `detekt` (`config/detekt/detekt.yml`, `maxIssues: 0`): passed
 - `lintDebug`: **BUILD SUCCESSFUL**
+- `scripts/verify.sh` (format check + detekt + unit tests + `assembleDebug`):
+  **BUILD SUCCESSFUL** in 28.27 s
 
 ### Source size
 
@@ -223,11 +225,11 @@ Measured with `find` / `wc -l`:
 find app/src -name '*.kt' | wc -l
 # 67
 find app/src -name '*.kt' -print0 | xargs -0 wc -l | tail -1
-# 5416 total
+# 5654 total
 ```
 
 Breakdown: 50 Kotlin files in `app/src/main`, 17 Kotlin test files across
-`src/test` and `src/androidTest`; 5,416 Kotlin lines total. This count excludes
+`src/test` and `src/androidTest`; 5,654 Kotlin lines total. This count excludes
 Gradle Kotlin DSL scripts and generated code.
 
 ### CSV import throughput
@@ -236,10 +238,10 @@ Gradle Kotlin DSL scripts and generated code.
 `CsvExpenseImporter.parse`, and records the measured result:
 
 ```text
-CSV_THROUGHPUT rows=1000 valid=995 invalid=5 elapsed_ms=36.829084
+CSV_THROUGHPUT rows=1000 valid=995 invalid=5 elapsed_ms=39.023667
 ```
 
-So: **36.83 ms** to parse 1,000 rows, **995 valid** and **5 invalid** (the invalid
+So: **39.02 ms** to parse 1,000 rows, **995 valid** and **5 invalid** (the invalid
 rows deliberately contain `not-an-amount`). The test asserts those exact counts.
 
 ### Sync behavior

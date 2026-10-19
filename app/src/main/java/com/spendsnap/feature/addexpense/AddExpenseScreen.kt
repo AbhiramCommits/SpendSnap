@@ -56,8 +56,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -65,6 +67,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.spendsnap.core.ui.CategoryDot
 import com.spendsnap.core.ui.ErrorBanner
 import com.spendsnap.core.ui.LoadingState
+import com.spendsnap.data.local.DatabaseSeeder
+import com.spendsnap.ui.theme.SpendSnapTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -75,10 +79,8 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddExpenseScreen(
-    expenseId: String?,
     onBack: () -> Unit,
     onSaved: () -> Unit,
     viewModel: AddExpenseViewModel = hiltViewModel(),
@@ -87,7 +89,6 @@ fun AddExpenseScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var pendingReceiptUri by rememberSaveable { mutableStateOf<String?>(null) }
-    var showDatePicker by remember { mutableStateOf(false) }
 
     val takePicture =
         rememberLauncherForActivityResult(
@@ -114,6 +115,32 @@ fun AddExpenseScreen(
     LaunchedEffect(state.saved) {
         if (state.saved) onSaved()
     }
+
+    AddExpenseContent(
+        state = state,
+        onBack = onBack,
+        onEvent = viewModel::onEvent,
+        onCaptureReceipt = {
+            val uri = createReceiptUri(context)
+            pendingReceiptUri = uri.toString()
+            takePicture.launch(uri)
+        },
+        onImportCsv = {
+            openCsv.launch(arrayOf("text/csv", "text/plain", "text/comma-separated-values"))
+        },
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddExpenseContent(
+    state: AddExpenseUiState,
+    onBack: () -> Unit,
+    onEvent: (AddExpenseEvent) -> Unit,
+    onCaptureReceipt: () -> Unit,
+    onImportCsv: () -> Unit,
+) {
+    var showDatePicker by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = Modifier.testTag("add_expense_screen"),
@@ -159,13 +186,16 @@ fun AddExpenseScreen(
                     OutlinedTextField(
                         value = state.merchant,
                         onValueChange = {
-                            viewModel.onEvent(AddExpenseEvent.MerchantChanged(it))
+                            onEvent(AddExpenseEvent.MerchantChanged(it))
                         },
                         modifier =
                             Modifier
                                 .fillMaxWidth()
                                 .testTag("merchant_field")
-                                .semantics { contentDescription = "Merchant name" },
+                                .semantics {
+                                    contentDescription = "Merchant name"
+                                    state.merchantError?.let { error(it) }
+                                },
                         label = { Text("Merchant") },
                         singleLine = true,
                         isError = state.merchantError != null,
@@ -180,13 +210,16 @@ fun AddExpenseScreen(
                     OutlinedTextField(
                         value = state.amount,
                         onValueChange = {
-                            viewModel.onEvent(AddExpenseEvent.AmountChanged(it))
+                            onEvent(AddExpenseEvent.AmountChanged(it))
                         },
                         modifier =
                             Modifier
                                 .fillMaxWidth()
                                 .testTag("amount_field")
-                                .semantics { contentDescription = "Amount in dollars" },
+                                .semantics {
+                                    contentDescription = "Amount in dollars"
+                                    state.amountError?.let { error(it) }
+                                },
                         label = { Text("Amount") },
                         prefix = { Text("$") },
                         singleLine = true,
@@ -208,7 +241,7 @@ fun AddExpenseScreen(
                             FilterChip(
                                 selected = state.selectedCategoryId == category.id,
                                 onClick = {
-                                    viewModel.onEvent(
+                                    onEvent(
                                         AddExpenseEvent.CategorySelected(category.id),
                                     )
                                 },
@@ -236,7 +269,7 @@ fun AddExpenseScreen(
                             modifier = Modifier.padding(16.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Icon(Icons.Outlined.CalendarMonth, contentDescription = null)
+                            Icon(Icons.Outlined.CalendarMonth, contentDescription = "Expense date")
                             Spacer(Modifier.width(12.dp))
                             Column {
                                 Text("Date", style = MaterialTheme.typography.labelLarge)
@@ -259,7 +292,7 @@ fun AddExpenseScreen(
                 item {
                     OutlinedTextField(
                         value = state.note,
-                        onValueChange = { viewModel.onEvent(AddExpenseEvent.NoteChanged(it)) },
+                        onValueChange = { onEvent(AddExpenseEvent.NoteChanged(it)) },
                         modifier =
                             Modifier
                                 .fillMaxWidth()
@@ -274,30 +307,24 @@ fun AddExpenseScreen(
                     Spacer(Modifier.height(6.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedButton(
-                            onClick = {
-                                val uri = createReceiptUri(context)
-                                pendingReceiptUri = uri.toString()
-                                takePicture.launch(uri)
-                            },
+                            onClick = onCaptureReceipt,
                             modifier = Modifier.testTag("capture_receipt_button"),
                         ) {
                             Icon(
                                 Icons.Outlined.PhotoCamera,
-                                contentDescription = null,
+                                contentDescription = "Capture receipt",
                                 modifier = Modifier.size(18.dp),
                             )
                             Spacer(Modifier.width(8.dp))
                             Text("Camera")
                         }
                         OutlinedButton(
-                            onClick = {
-                                openCsv.launch(arrayOf("text/csv", "text/plain", "text/comma-separated-values"))
-                            },
+                            onClick = onImportCsv,
                             modifier = Modifier.testTag("import_csv_button"),
                         ) {
                             Icon(
                                 Icons.Outlined.UploadFile,
-                                contentDescription = null,
+                                contentDescription = "Import CSV",
                                 modifier = Modifier.size(18.dp),
                             )
                             Spacer(Modifier.width(8.dp))
@@ -311,7 +338,7 @@ fun AddExpenseScreen(
                         ) {
                             Icon(
                                 Icons.Outlined.CheckCircle,
-                                contentDescription = null,
+                                contentDescription = "Receipt attached",
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(18.dp),
                             )
@@ -331,14 +358,14 @@ fun AddExpenseScreen(
                             summary = importSummary,
                             errors = state.importErrors.map { "Line ${it.lineNumber}: ${it.message}" },
                             onDismiss = {
-                                viewModel.onEvent(AddExpenseEvent.DismissImportReport)
+                                onEvent(AddExpenseEvent.DismissImportReport)
                             },
                         )
                     }
                 }
                 item {
                     Button(
-                        onClick = { viewModel.onEvent(AddExpenseEvent.Save) },
+                        onClick = { onEvent(AddExpenseEvent.Save) },
                         modifier =
                             Modifier
                                 .fillMaxWidth()
@@ -365,7 +392,7 @@ fun AddExpenseScreen(
                                 Instant.ofEpochMilli(selected)
                                     .atZone(ZoneOffset.UTC)
                                     .toLocalDate()
-                            viewModel.onEvent(
+                            onEvent(
                                 AddExpenseEvent.DateSelected(
                                     localDate.atStartOfDay(ZoneId.systemDefault())
                                         .toInstant()
@@ -427,3 +454,41 @@ private fun readText(
     runCatching {
         context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
     }.getOrNull()
+
+@Preview(name = "Add expense light", showBackground = true)
+@Composable
+fun AddExpenseLightPreview() {
+    SpendSnapTheme(darkTheme = false) {
+        AddExpenseContent(
+            state = previewAddExpenseState(),
+            onBack = {},
+            onEvent = {},
+            onCaptureReceipt = {},
+            onImportCsv = {},
+        )
+    }
+}
+
+@Preview(name = "Add expense dark", showBackground = true)
+@Composable
+fun AddExpenseDarkPreview() {
+    SpendSnapTheme(darkTheme = true) {
+        AddExpenseContent(
+            state = previewAddExpenseState(),
+            onBack = {},
+            onEvent = {},
+            onCaptureReceipt = {},
+            onImportCsv = {},
+        )
+    }
+}
+
+private fun previewAddExpenseState() =
+    AddExpenseUiState(
+        isLoading = false,
+        merchant = "Corner Cafe",
+        amount = "12.50",
+        categories = DatabaseSeeder.DEFAULT_CATEGORIES,
+        selectedCategoryId = "category-meals",
+        note = "Coffee with the design team",
+    )

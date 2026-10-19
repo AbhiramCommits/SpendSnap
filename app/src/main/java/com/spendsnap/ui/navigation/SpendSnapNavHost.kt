@@ -2,8 +2,8 @@ package com.spendsnap.ui.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ReceiptLong
 import androidx.compose.material.icons.outlined.Insights
-import androidx.compose.material.icons.outlined.ReceiptLong
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -12,8 +12,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
@@ -54,12 +52,8 @@ fun SpendSnapNavHost() {
                         },
                         icon = {
                             Icon(
-                                imageVector = Icons.Outlined.ReceiptLong,
-                                contentDescription = null,
-                                modifier =
-                                    Modifier.semantics {
-                                        contentDescription = "Expenses tab"
-                                    },
+                                imageVector = Icons.AutoMirrored.Outlined.ReceiptLong,
+                                contentDescription = "Expenses tab",
                             )
                         },
                         label = { Text("Expenses") },
@@ -81,11 +75,7 @@ fun SpendSnapNavHost() {
                         icon = {
                             Icon(
                                 imageVector = Icons.Outlined.Insights,
-                                contentDescription = null,
-                                modifier =
-                                    Modifier.semantics {
-                                        contentDescription = "Insights tab"
-                                    },
+                                contentDescription = "Insights tab",
                             )
                         },
                         label = { Text("Insights") },
@@ -117,9 +107,8 @@ fun SpendSnapNavHost() {
                             defaultValue = null
                         },
                     ),
-            ) { entry ->
+            ) {
                 AddExpenseScreen(
-                    expenseId = entry.arguments?.getString("expenseId"),
                     onBack = { navController.popBackStack() },
                     onSaved = { navController.popBackStack() },
                 )
